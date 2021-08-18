@@ -1,0 +1,11 @@
+module DpcppComputeMgr {
+
+  // One per node
+  nodegroup DpcppComputeMgr {
+#ifdef NAMD_DPCPP
+    entry DpcppComputeMgr(void);
+    entry void initialize(CkQdMsg *);
+#endif
+  };
+
+};

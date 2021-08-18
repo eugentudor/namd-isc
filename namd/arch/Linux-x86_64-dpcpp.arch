@@ -1,0 +1,30 @@
+NAMD_ARCH = Linux-x86_64
+CHARMARCH = multicore-linux64-clang
+
+# These flags are also passed to Charm++ for processing .ci files
+DPCPPFLAGS =
+DPCPPFLAGS += -DNAMD_DPCPP  -DMKL_ILP64 -I$(MKLROOT)/include/fftw
+
+DBG_FLAGS= #-g -O2
+DBG_FLAGS+= -gline-tables-only -fdebug-info-for-profiling
+DBG_FLAGS+= -Wno-pointer-bool-conversion -Wno-parentheses -Wno-non-c-typedef-for-linkage -Wno-deprecated-declarations
+FLOATOPTS = $(DBG_FLAGS) -DNAMD_DISABLE_SSE
+SYCLDEF = -fsycl
+#SYCLDEF += -Wno-unused-command-line-argument
+#SYCLDEF += -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xs -device -Xs ats
+#SYCLDEF += -options=DisableStatelessToStatefulOptimization
+SYCLDEF += -fsycl-device-code-split=per_kernel
+
+WIGNOREFLAGS=-Wno-mismatched-new-delete -Wno-deprecated-register -Wno-format -Wno-dangling-else
+CXX = dpcpp $(FLOATOPTS) $(WIGNOREFLAGS) -std=c++17 -Wno-register $(DPCPPFLAGS)
+CXXOPTS = $(SYCLDEF) $(DBG_FLAGS) $(FLOATOPTS)
+CXXNOALIASOPTS = $(FLOATOPTS) $(DBG_FLAGS) -fno-alias
+CXXCOLVAROPTS = $(DBG_FLAGS)
+CC = icx
+COPTS = $(DBG_FLAGS) $(FLOATOPTS)
+
+# is run via charmc, as this option triggers the GPU offline code compilation
+CHARMOPTS = -ld++-option ' $(SYCLDEF) '
+#EXTRALINKLIBS = -lsycl -L$(ONEAPI_ROOT)/compiler/latest/linux/compiler/lib/intel64 -lirc -lsvml -lOpenCL -ld++-option ' $(SYCLDEF) '
+EXTRALINKLIBS = -L$(ONEAPI_ROOT)/compiler/latest/linux/lib -L$(ONEAPI_ROOT)/compiler/latest/linux/compiler/lib/intel64 -L$(MKLROOT)/lib/intel64 -lmkl_sycl -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lirc -lsycl -lOpenCL -lsvml -ld++-option ' $(SYCLDEF) '
+
